@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 
 const KEY = 'my-budget-v5';
+const RECON_KEY = 'my-budget-reconciliation-v1';
 
 export default function BackupControls() {
   const inputRef = useRef(null);
@@ -16,7 +17,9 @@ export default function BackupControls() {
     }
     try {
       const parsed = JSON.parse(raw);
-      const backup = JSON.stringify({ app: 'my-budget', storageKey: KEY, exportedAt: new Date().toISOString(), data: parsed }, null, 2);
+      const reconRaw = localStorage.getItem(RECON_KEY);
+      const reconciliation = reconRaw ? JSON.parse(reconRaw) : {};
+      const backup = JSON.stringify({ app: 'my-budget', storageKey: KEY, exportedAt: new Date().toISOString(), data: parsed, reconciliation }, null, 2);
       const blob = new Blob([backup], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -26,7 +29,7 @@ export default function BackupControls() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setStatus('Backup exported successfully. Keep that file somewhere safe.');
+      setStatus('Backup exported successfully. Budget and reconciliation data are included.');
     } catch {
       setStatus('The saved budget could not be exported.');
     }
@@ -43,6 +46,7 @@ export default function BackupControls() {
         if (!data || typeof data !== 'object' || !Array.isArray(data.bills)) throw new Error('Invalid backup');
         if (!window.confirm('Restore this backup? Your current budget data in this browser will be replaced.')) return;
         localStorage.setItem(KEY, JSON.stringify(data));
+        if (parsed?.app === 'my-budget' && parsed.reconciliation && typeof parsed.reconciliation === 'object') localStorage.setItem(RECON_KEY, JSON.stringify(parsed.reconciliation));
         window.location.reload();
       } catch {
         setStatus('That file does not look like a valid My Budget backup. Nothing was changed.');
