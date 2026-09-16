@@ -1,4 +1,5 @@
 import './globals.css';
+import BackupControls from './BackupControls';
 
 export const metadata = {
   title: 'My Budget',
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <BackupControls />
+      </body>
     </html>
   );
 }
