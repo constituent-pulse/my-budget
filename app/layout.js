@@ -1,5 +1,6 @@
 import './globals.css';
 import BackupControls from './BackupControls';
+import WeeklyReconciliation from './WeeklyReconciliation';
 
 export const metadata = {
   title: 'My Budget',
@@ -11,6 +12,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         {children}
+        <WeeklyReconciliation />
         <BackupControls />
       </body>
     </html>
