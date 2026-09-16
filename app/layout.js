@@ -18,14 +18,16 @@ export default function RootLayout({ children }) {
             <a className="nav-brand" href="#dashboard">My Budget</a>
             <div className="nav-links">
               <a href="#dashboard">Dashboard</a>
-              <a href="#budget-details">Budget details</a>
               <a href="#category-totals">Categories</a>
+              <a href="#budget-details">Budget details</a>
             </div>
           </div>
         </nav>
-        <div className="dashboard-shell"><PaycheckDashboard /></div>
+        <div className="dashboard-shell">
+          <PaycheckDashboard />
+          <div id="category-totals"><div id="category-totals-slot" /></div>
+        </div>
         <div id="budget-details" className="details-wrap">{children}</div>
-        <div id="category-totals" className="supplemental-wrap"><CategoryTotals /></div>
         <WeeklyReconciliation />
         <BackupControls />
       </body>
