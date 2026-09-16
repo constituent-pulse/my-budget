@@ -3,132 +3,51 @@
 import { useEffect, useMemo, useState } from 'react';
 
 const DEFAULT_BILLS = [
-  { id: 'insurance', name: 'Insurance', dueDate: '2026-09-18', repeat: 'monthly', amount: 160 },
-  { id: 'support', name: 'Child Support', dueDate: '2026-09-18', repeat: 'monthly', amount: 354 },
-  { id: 'internet', name: 'Internet', dueDate: '2026-09-20', repeat: 'monthly', amount: 60 },
-  { id: 'phone', name: 'Phone', dueDate: '2026-09-22', repeat: 'monthly', amount: 80 },
-  { id: 'zip', name: 'ZIP', dueDate: '2026-09-23', repeat: 'monthly', amount: 200.64 },
-  { id: 'bronco', name: 'Bronco Sport', dueDate: '2026-09-24', repeat: 'monthly', amount: 1000 },
-  { id: 'gas', name: 'Gas / Auto', dueDate: '2026-09-17', repeat: 'weekly', amount: 120 },
-  { id: 'village', name: 'Village', dueDate: '2026-09-28', repeat: 'monthly', amount: 150 },
-  { id: 'grocery', name: 'Grocery / Household', dueDate: '2026-09-30', repeat: 'monthly', amount: 300 },
-  { id: 'tax', name: 'Tax Burden', dueDate: '2026-09-30', repeat: 'monthly', amount: 340 },
-  { id: 'rent', name: 'Rent', dueDate: '2026-10-01', repeat: 'monthly', amount: 500 },
+  { id:'insurance', name:'Insurance', dueDate:'2026-09-18', repeat:'monthly', amount:160 },
+  { id:'support', name:'Child Support', dueDate:'2026-09-18', repeat:'monthly', amount:354 },
+  { id:'internet', name:'Internet', dueDate:'2026-09-20', repeat:'monthly', amount:60 },
+  { id:'phone', name:'Phone', dueDate:'2026-09-22', repeat:'monthly', amount:80 },
+  { id:'zip', name:'ZIP', dueDate:'2026-09-23', repeat:'monthly', amount:200.64 },
+  { id:'bronco', name:'Bronco Sport', dueDate:'2026-09-24', repeat:'monthly', amount:1000 },
+  { id:'gas', name:'Gas / Auto', dueDate:'2026-09-17', repeat:'weekly', amount:120 },
+  { id:'village', name:'Village', dueDate:'2026-09-28', repeat:'monthly', amount:150 },
+  { id:'grocery', name:'Grocery / Household', dueDate:'2026-09-30', repeat:'monthly', amount:300 },
+  { id:'tax', name:'Tax Burden', dueDate:'2026-09-30', repeat:'monthly', amount:340 },
+  { id:'rent', name:'Rent', dueDate:'2026-10-01', repeat:'monthly', amount:500 },
 ];
+const KEY='my-budget-v4';
+const parse=s=>new Date(`${s}T12:00:00`);
+const iso=d=>d.toISOString().slice(0,10);
+function addDays(s,n){const d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
+function addMonths(s,n){const a=parse(s),day=a.getDate(),d=new Date(a.getFullYear(),a.getMonth()+n,1,12),last=new Date(d.getFullYear(),d.getMonth()+1,0,12).getDate();d.setDate(Math.min(day,last));return iso(d)}
+const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v||0));
+const pretty=s=>parse(s).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const monthLabel=s=>parse(`${s}-01`).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+function monthBounds(m){const [y,mo]=m.split('-').map(Number);return {start:`${m}-01`,end:iso(new Date(y,mo,0,12))}}
+function shiftMonth(m,n){const [y,mo]=m.split('-').map(Number),d=new Date(y,mo-1+n,1,12);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function occurrences(b,start,end){let date=b.dueDate,out=[],guard=0;while(date<start&&guard++<500){if(b.repeat==='weekly')date=addDays(date,7);else if(b.repeat==='biweekly')date=addDays(date,14);else if(b.repeat==='monthly')date=addMonths(date,1);else return []}while(date<=end&&guard++<1000){if(date>=start)out.push({...b,date,key:`${b.id}:${date}`});if(b.repeat==='weekly')date=addDays(date,7);else if(b.repeat==='biweekly')date=addDays(date,14);else if(b.repeat==='monthly')date=addMonths(date,1);else break}return out}
+function weekIndex(date,start){return Math.floor((parse(date)-parse(start))/86400000/7)}
 
-const STORAGE_KEY = 'my-budget-v3';
-
-function parseDate(s) { return new Date(`${s}T12:00:00`); }
-function iso(d) { return d.toISOString().slice(0, 10); }
-function addDays(s, n) { const d = parseDate(s); d.setDate(d.getDate() + n); return iso(d); }
-function addMonths(s, n) {
-  const original = parseDate(s);
-  const day = original.getDate();
-  const d = new Date(original.getFullYear(), original.getMonth() + n, 1, 12);
-  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0, 12).getDate();
-  d.setDate(Math.min(day, last));
-  return iso(d);
-}
-function money(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(v || 0)); }
-function pretty(s) { return parseDate(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
-
-function occurrencesForBill(bill, start, end) {
-  const out = [];
-  let date = bill.dueDate;
-  let guard = 0;
-  while (date < start && guard++ < 500) {
-    if (bill.repeat === 'weekly') date = addDays(date, 7);
-    else if (bill.repeat === 'biweekly') date = addDays(date, 14);
-    else if (bill.repeat === 'monthly') date = addMonths(date, 1);
-    else return [];
-  }
-  guard = 0;
-  while (date <= end && guard++ < 500) {
-    if (date >= start) out.push({ ...bill, occurrenceDate: date, key: `${bill.id}:${date}` });
-    if (bill.repeat === 'weekly') date = addDays(date, 7);
-    else if (bill.repeat === 'biweekly') date = addDays(date, 14);
-    else if (bill.repeat === 'monthly') date = addMonths(date, 1);
-    else break;
-  }
-  return out;
-}
-
-export default function Home() {
-  const [payday, setPayday] = useState('2026-09-17');
-  const [paycheck, setPaycheck] = useState(2608);
-  const [bank, setBank] = useState(404.75);
-  const [advances, setAdvances] = useState(1412);
-  const [bills, setBills] = useState(DEFAULT_BILLS);
-  const [payments, setPayments] = useState({});
-  const [newBill, setNewBill] = useState({ name: '', amount: '', dueDate: '', repeat: 'monthly' });
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('my-budget-v2');
-    if (saved) try {
-      const p = JSON.parse(saved);
-      if (p.payday) setPayday(p.payday);
-      if (p.paycheck !== undefined) setPaycheck(p.paycheck);
-      if (p.bank !== undefined) setBank(p.bank);
-      if (p.advances !== undefined) setAdvances(p.advances);
-      if (Array.isArray(p.bills)) setBills(p.bills.map(({ paid, ...b }) => b));
-      if (p.payments) setPayments(p.payments);
-    } catch {}
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify({ payday, paycheck, bank, advances, bills, payments }));
-  }, [hydrated, payday, paycheck, bank, advances, bills, payments]);
-
-  const periods = useMemo(() => {
-    const paydays = Array.from({ length: 7 }, (_, i) => addDays(payday, i * 14));
-    const end = addDays(paydays[6], -1);
-    const all = bills.flatMap((b) => occurrencesForBill(b, payday, end));
-    return paydays.slice(0, 6).map((date, i) => {
-      const periodEnd = addDays(paydays[i + 1], -1);
-      const items = all.filter((o) => o.occurrenceDate >= date && o.occurrenceDate <= periodEnd).sort((a,b) => a.occurrenceDate.localeCompare(b.occurrenceDate));
-      const planned = items.reduce((s, o) => s + Number(o.amount || 0), 0);
-      const paid = items.reduce((s, o) => s + Math.min(Number(o.amount || 0), Number(payments[o.key] || 0)), 0);
-      return { date, end: periodEnd, items, planned, paid, remainingBills: planned - paid, leftover: Number(paycheck || 0) - (planned - paid) };
-    });
-  }, [payday, paycheck, bills, payments]);
-
-  const current = periods[0];
-  const currentFunds = Number(bank || 0) + Number(paycheck || 0) - Number(advances || 0);
-  const currentSafe = currentFunds - (current?.remainingBills || 0);
-
-  function patchBill(id, patch) { setBills((x) => x.map((b) => b.id === id ? { ...b, ...patch } : b)); }
-  function removeBill(id) { setBills((x) => x.filter((b) => b.id !== id)); }
-  function setPaid(key, value) { setPayments((p) => ({ ...p, [key]: value })); }
-  function addBill(e) {
-    e.preventDefault();
-    if (!newBill.name.trim() || !newBill.amount || !newBill.dueDate) return;
-    setBills((x) => [...x, { id: `${Date.now()}`, name: newBill.name.trim(), amount: Number(newBill.amount), dueDate: newBill.dueDate, repeat: newBill.repeat }]);
-    setNewBill({ name: '', amount: '', dueDate: '', repeat: 'monthly' });
-  }
-
-  return <main className="shell">
-    <header className="hero"><div><p className="eyebrow">Paycheck-driven planner</p><h1>My Budget</h1><p className="sub">Each paycheck automatically picks up the bills due before the next paycheck.</p></div><div className={`safe ${currentSafe < 0 ? 'negative' : ''}`}><span>Current period safe to spend</span><strong>{money(currentSafe)}</strong></div></header>
-
-    <section className="summary-grid">
-      <label className="card">Next payday<input type="date" value={payday} onChange={(e) => setPayday(e.target.value)} /></label>
-      <label className="card">Paycheck amount<input type="number" step="0.01" value={paycheck} onChange={(e) => setPaycheck(e.target.value)} /></label>
-      <label className="card">Current bank balance<input type="number" step="0.01" value={bank} onChange={(e) => setBank(e.target.value)} /></label>
-      <label className="card">Pay advances owed<input type="number" step="0.01" value={advances} onChange={(e) => setAdvances(e.target.value)} /></label>
-    </section>
-
-    <section className="panel"><div className="section-head"><div><p className="eyebrow">Automatic allocation</p><h2>Pay periods</h2></div><p>Change any due date or recurring amount below and these periods recalculate instantly.</p></div>
-      <div style={{display:'grid',gap:'16px'}}>{periods.map((period, index) => <article className="card" key={period.date} style={{display:'block'}}>
-        <div className="section-head"><div><p className="eyebrow">Paycheck {index + 1}</p><h2>{pretty(period.date)} → {pretty(period.end)}</h2></div><div style={{textAlign:'right'}}><strong style={{fontSize:'1.35rem'}}>{money(period.leftover)}</strong><p>left after unpaid bills</p></div></div>
-        <div className="stats"><article><span>Paycheck</span><strong>{money(paycheck)}</strong></article><article><span>Bills this period</span><strong>{money(period.planned)}</strong></article><article><span>Still to pay</span><strong>{money(period.remainingBills)}</strong></article></div>
-        {period.items.length ? <div className="table-wrap"><table><thead><tr><th>Due</th><th>Bill</th><th>Amount</th><th>Paid this occurrence</th><th>Remaining</th></tr></thead><tbody>{period.items.map((o) => { const paid = Math.min(Number(o.amount||0), Number(payments[o.key]||0)); return <tr key={o.key}><td>{pretty(o.occurrenceDate)}</td><td>{o.name}</td><td>{money(o.amount)}</td><td><input className="money-input" type="number" min="0" max={o.amount} step="0.01" value={payments[o.key] || ''} placeholder="0.00" onChange={(e)=>setPaid(o.key,e.target.value)} /></td><td className={paid >= Number(o.amount) ? 'done' : ''}>{money(Number(o.amount)-paid)}</td></tr>})}</tbody></table></div> : <p>No bills due in this pay period.</p>}
-      </article>)}</div>
-    </section>
-
-    <section className="panel"><div className="section-head"><div><p className="eyebrow">Recurring rules</p><h2>Bills & expenses</h2></div><p>The due date is the first occurrence; weekly, biweekly and monthly items roll forward automatically.</p></div><div className="table-wrap"><table><thead><tr><th>Bill</th><th>First / next due</th><th>Repeats</th><th>Amount</th><th></th></tr></thead><tbody>{bills.map((b)=><tr key={b.id}><td><input className="text-input" value={b.name} onChange={(e)=>patchBill(b.id,{name:e.target.value})}/></td><td><input type="date" value={b.dueDate} onChange={(e)=>patchBill(b.id,{dueDate:e.target.value})}/></td><td><select value={b.repeat} onChange={(e)=>patchBill(b.id,{repeat:e.target.value})}><option value="monthly">monthly</option><option value="biweekly">biweekly</option><option value="weekly">weekly</option><option value="one-time">one-time</option></select></td><td><input className="money-input" type="number" step="0.01" value={b.amount} onChange={(e)=>patchBill(b.id,{amount:e.target.value})}/></td><td><button className="icon-button" onClick={()=>removeBill(b.id)}>×</button></td></tr>)}</tbody></table></div></section>
-
-    <form className="panel add-form" onSubmit={addBill}><div className="section-head"><div><p className="eyebrow">Flexible</p><h2>Add a bill or expense</h2></div></div><div className="form-grid"><input placeholder="Bill name" value={newBill.name} onChange={(e)=>setNewBill({...newBill,name:e.target.value})}/><input type="number" step="0.01" placeholder="Amount" value={newBill.amount} onChange={(e)=>setNewBill({...newBill,amount:e.target.value})}/><input type="date" value={newBill.dueDate} onChange={(e)=>setNewBill({...newBill,dueDate:e.target.value})}/><select value={newBill.repeat} onChange={(e)=>setNewBill({...newBill,repeat:e.target.value})}><option value="monthly">monthly</option><option value="biweekly">biweekly</option><option value="weekly">weekly</option><option value="one-time">one-time</option></select><button type="submit">Add expense</button></div></form>
-    <footer>Payments are tracked separately for each occurrence. Changes save automatically in this browser.</footer>
-  </main>;
+export default function Home(){
+ const [month,setMonth]=useState('2026-09'),[payday,setPayday]=useState('2026-09-17'),[paycheck,setPaycheck]=useState(2608),[bank,setBank]=useState(404.75),[advances,setAdvances]=useState(1412),[bills,setBills]=useState(DEFAULT_BILLS),[adjustments,setAdjustments]=useState({}),[hydrated,setHydrated]=useState(false),[showRules,setShowRules]=useState(false);
+ const [newBill,setNewBill]=useState({name:'',amount:'',dueDate:'',repeat:'monthly'});
+ useEffect(()=>{const raw=localStorage.getItem(KEY)||localStorage.getItem('my-budget-v3');if(raw)try{const p=JSON.parse(raw);if(p.payday)setPayday(p.payday);if(p.paycheck!==undefined)setPaycheck(p.paycheck);if(p.bank!==undefined)setBank(p.bank);if(p.advances!==undefined)setAdvances(p.advances);if(Array.isArray(p.bills))setBills(p.bills);if(p.adjustments)setAdjustments(p.adjustments)}catch{}setHydrated(true)},[]);
+ useEffect(()=>{if(hydrated)localStorage.setItem(KEY,JSON.stringify({payday,paycheck,bank,advances,bills,adjustments}))},[hydrated,payday,paycheck,bank,advances,bills,adjustments]);
+ const data=useMemo(()=>{const {start,end}=monthBounds(month);const days=Math.round((parse(end)-parse(start))/86400000)+1,weeks=Array.from({length:Math.ceil(days/7)},(_,i)=>({index:i,start:addDays(start,i*7),end:addDays(start,Math.min(days-1,i*7+6)),items:[],income:0}));const occ=bills.flatMap(b=>occurrences(b,start,end));for(const o of occ){const a=adjustments[o.key]||{},assigned=a.week??weekIndex(o.date,start),item={...o,planned:Number(a.planned??o.amount),actual:Number(a.actual??0),assigned};if(weeks[assigned])weeks[assigned].items.push(item)}let pd=payday,guard=0;while(pd<start&&guard++<100)pd=addDays(pd,14);while(pd<=end&&guard++<200){const wi=weekIndex(pd,start);if(weeks[wi])weeks[wi].income+=Number(paycheck||0);pd=addDays(pd,14)}weeks.forEach(w=>w.items.sort((a,b)=>a.date.localeCompare(b.date)));const income=weeks.reduce((s,w)=>s+w.income,0),planned=weeks.reduce((s,w)=>s+w.items.reduce((x,i)=>x+i.planned,0),0),actual=weeks.reduce((s,w)=>s+w.items.reduce((x,i)=>x+i.actual,0),0);return {weeks,income,planned,actual,projected:Number(bank||0)+income-Number(advances||0)-planned};},[month,payday,paycheck,bank,advances,bills,adjustments]);
+ function adjust(key,patch){setAdjustments(a=>({...a,[key]:{...(a[key]||{}),...patch}}))}
+ function patchBill(id,patch){setBills(x=>x.map(b=>b.id===id?{...b,...patch}:b))}
+ function addBill(e){e.preventDefault();if(!newBill.name||!newBill.amount||!newBill.dueDate)return;setBills(x=>[...x,{...newBill,id:String(Date.now()),amount:Number(newBill.amount)}]);setNewBill({name:'',amount:'',dueDate:'',repeat:'monthly'})}
+ function split(item){const half=Math.round(item.planned*50)/100;adjust(item.key,{planned:half});const id=`split-${Date.now()}`;setBills(x=>[...x,{id,name:`${item.name} (split)`,dueDate:addDays(item.date,7),repeat:'one-time',amount:item.planned-half}])}
+ return <main className="shell">
+  <header className="hero"><div><p className="eyebrow">Monthly cash-flow planner</p><h1>My Budget</h1><p className="sub">See the whole month, then adjust the week when real life changes the plan.</p></div><div className={`safe ${data.projected<0?'negative':''}`}><span>Projected month end</span><strong>{money(data.projected)}</strong></div></header>
+  <section className="panel"><div className="section-head"><div><p className="eyebrow">Month view</p><h2>{monthLabel(month)}</h2></div><div className="month-nav"><button onClick={()=>setMonth(shiftMonth(month,-1))}>← Previous</button><input type="month" value={month} onChange={e=>setMonth(e.target.value)}/><button onClick={()=>setMonth(shiftMonth(month,1))}>Next →</button></div></div>
+   <div className="summary-grid"><label className="card">Starting bank<input type="number" step=".01" value={bank} onChange={e=>setBank(e.target.value)}/></label><label className="card">Biweekly paycheck<input type="number" step=".01" value={paycheck} onChange={e=>setPaycheck(e.target.value)}/></label><label className="card">Payday anchor<input type="date" value={payday} onChange={e=>setPayday(e.target.value)}/></label><label className="card">Advances owed<input type="number" step=".01" value={advances} onChange={e=>setAdvances(e.target.value)}/></label></div>
+   <div className="stats"><article><span>Income this month</span><strong>{money(data.income)}</strong></article><article><span>Planned spending</span><strong>{money(data.planned)}</strong></article><article><span>Actually paid</span><strong>{money(data.actual)}</strong></article></div>
+  </section>
+  <section className="panel"><div className="section-head"><div><p className="eyebrow">Week to week</p><h2>Cash-flow plan</h2></div><p>Move, resize, split or record the actual amount without changing the recurring rule.</p></div>
+   <div className="weeks">{data.weeks.map((w,wi)=>{const planned=w.items.reduce((s,i)=>s+i.planned,0),actual=w.items.reduce((s,i)=>s+i.actual,0),net=w.income-planned;return <article className="week-card" key={w.start}><div className="week-head"><div><p className="eyebrow">Week {wi+1}</p><h2>{pretty(w.start)} – {pretty(w.end)}</h2></div><div className={net<0?'week-net negative-text':'week-net'}><small>Planned net</small><strong>{money(net)}</strong></div></div><div className="week-stats"><span>Income <b>{money(w.income)}</b></span><span>Planned <b>{money(planned)}</b></span><span>Actual <b>{money(actual)}</b></span></div>{w.items.length?<div className="table-wrap"><table className="week-table"><thead><tr><th>Due</th><th>Expense</th><th>Planned</th><th>Actual</th><th>Move to</th><th></th></tr></thead><tbody>{w.items.map(i=><tr key={i.key}><td>{pretty(i.date)}</td><td>{i.name}</td><td><input type="number" step=".01" value={i.planned} onChange={e=>adjust(i.key,{planned:Number(e.target.value)})}/></td><td><input type="number" step=".01" placeholder="0.00" value={i.actual||''} onChange={e=>adjust(i.key,{actual:Number(e.target.value)})}/></td><td><select value={i.assigned} onChange={e=>adjust(i.key,{week:Number(e.target.value)})}>{data.weeks.map((_,x)=><option key={x} value={x}>Week {x+1}</option>)}</select></td><td><button className="small-button" onClick={()=>split(i)}>Split</button></td></tr>)}</tbody></table></div>:<p className="empty">Nothing planned this week.</p>}</article>})}</div>
+  </section>
+  <section className="panel"><div className="section-head"><div><p className="eyebrow">Permanent settings</p><h2>Recurring bills & expenses</h2></div><button className="small-button" onClick={()=>setShowRules(v=>!v)}>{showRules?'Hide':'Edit recurring rules'}</button></div>{showRules&&<><div className="table-wrap"><table><thead><tr><th>Name</th><th>Due anchor</th><th>Frequency</th><th>Default amount</th></tr></thead><tbody>{bills.map(b=><tr key={b.id}><td><input value={b.name} onChange={e=>patchBill(b.id,{name:e.target.value})}/></td><td><input type="date" value={b.dueDate} onChange={e=>patchBill(b.id,{dueDate:e.target.value})}/></td><td><select value={b.repeat} onChange={e=>patchBill(b.id,{repeat:e.target.value})}><option value="monthly">monthly</option><option value="biweekly">biweekly</option><option value="weekly">weekly</option><option value="one-time">one-time</option></select></td><td><input type="number" step=".01" value={b.amount} onChange={e=>patchBill(b.id,{amount:Number(e.target.value)})}/></td></tr>)}</tbody></table></div><form className="form-grid rule-add" onSubmit={addBill}><input placeholder="New expense" value={newBill.name} onChange={e=>setNewBill({...newBill,name:e.target.value})}/><input type="number" placeholder="Amount" value={newBill.amount} onChange={e=>setNewBill({...newBill,amount:e.target.value})}/><input type="date" value={newBill.dueDate} onChange={e=>setNewBill({...newBill,dueDate:e.target.value})}/><select value={newBill.repeat} onChange={e=>setNewBill({...newBill,repeat:e.target.value})}><option value="monthly">monthly</option><option value="biweekly">biweekly</option><option value="weekly">weekly</option><option value="one-time">one-time</option></select><button>Add</button></form></>}</section>
+  <footer>Monthly plan + week-by-week adjustments save automatically in this browser.</footer>
+ </main>
 }
