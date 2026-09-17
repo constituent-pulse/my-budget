@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import CloudSync from './CloudSync';
+import BudgetSetup from './BudgetSetup';
 
 export default function AppMenu(){
   const[open,setOpen]=useState(false);
@@ -19,8 +20,9 @@ export default function AppMenu(){
         <a href="/auto-loan" onClick={go}>Bronco Sport loan</a>
       </nav>
       <div className="menu-divider"/>
+      <BudgetSetup />
       <CloudSync />
-      <div className="menu-note">Backup and data tools remain available at the bottom of Budget details.</div>
+      <div className="menu-note">Setup changes how the budget is displayed without changing your bill amounts or due dates.</div>
     </div>}
   </div>;
 }
