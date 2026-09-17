@@ -13,9 +13,10 @@ export default function AppMenu(){
     {open&&<div className="menu-popover">
       <div className="menu-heading"><strong>My Budget</strong><small>Navigation & settings</small></div>
       <nav className="menu-links" aria-label="App menu">
-        <a href="#dashboard" onClick={go}>Dashboard</a>
-        <a href="#category-totals" onClick={go}>Categories</a>
-        <a href="#budget-details" onClick={go}>Budget details</a>
+        <a href="/#dashboard" onClick={go}>Dashboard</a>
+        <a href="/#category-totals" onClick={go}>Categories</a>
+        <a href="/#budget-details" onClick={go}>Budget details</a>
+        <a href="/auto-loan" onClick={go}>Bronco Sport loan</a>
       </nav>
       <div className="menu-divider"/>
       <CloudSync />
