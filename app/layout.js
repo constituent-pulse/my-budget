@@ -1,9 +1,6 @@
 import './globals.css';
-import BackupControls from './BackupControls';
-import WeeklyReconciliation from './WeeklyReconciliation';
-import CategoryTotals from './CategoryTotals';
-import PaycheckDashboard from './PaycheckDashboard';
 import AppMenu from './AppMenu';
+import AppContent from './AppContent';
 
 export const metadata = {
   title: 'My Budget',
@@ -17,17 +14,11 @@ export default function RootLayout({ children }) {
         <nav className="app-nav" aria-label="Budget navigation">
           <div className="app-nav-inner app-nav-streamlined">
             <AppMenu />
-            <a className="nav-brand nav-brand-centered" href="#dashboard">My Budget</a>
+            <a className="nav-brand nav-brand-centered" href="/">My Budget</a>
             <div className="nav-spacer" aria-hidden="true" />
           </div>
         </nav>
-        <div className="dashboard-shell">
-          <PaycheckDashboard />
-          <div id="category-totals"><div id="category-totals-slot" /></div>
-        </div>
-        <div id="budget-details" className="details-wrap">{children}</div>
-        <WeeklyReconciliation />
-        <BackupControls />
+        <AppContent>{children}</AppContent>
       </body>
     </html>
   );
