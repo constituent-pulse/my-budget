@@ -21,13 +21,13 @@ export default function RootLayout({ children }) {
               <a href="#dashboard">Dashboard</a>
               <a href="#category-totals">Categories</a>
               <a href="#budget-details">Budget details</a>
+              <CloudSync />
             </div>
           </div>
         </nav>
         <div className="dashboard-shell">
           <PaycheckDashboard />
           <div id="category-totals"><div id="category-totals-slot" /></div>
-          <CloudSync />
         </div>
         <div id="budget-details" className="details-wrap">{children}</div>
         <WeeklyReconciliation />
