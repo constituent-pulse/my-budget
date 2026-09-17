@@ -3,6 +3,7 @@ import BackupControls from './BackupControls';
 import WeeklyReconciliation from './WeeklyReconciliation';
 import CategoryTotals from './CategoryTotals';
 import PaycheckDashboard from './PaycheckDashboard';
+import CloudSync from './CloudSync';
 
 export const metadata = {
   title: 'My Budget',
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
         <div className="dashboard-shell">
           <PaycheckDashboard />
           <div id="category-totals"><div id="category-totals-slot" /></div>
+          <CloudSync />
         </div>
         <div id="budget-details" className="details-wrap">{children}</div>
         <WeeklyReconciliation />
