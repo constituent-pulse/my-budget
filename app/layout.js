@@ -3,7 +3,7 @@ import BackupControls from './BackupControls';
 import WeeklyReconciliation from './WeeklyReconciliation';
 import CategoryTotals from './CategoryTotals';
 import PaycheckDashboard from './PaycheckDashboard';
-import CloudSync from './CloudSync';
+import AppMenu from './AppMenu';
 
 export const metadata = {
   title: 'My Budget',
@@ -15,14 +15,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <nav className="app-nav" aria-label="Budget navigation">
-          <div className="app-nav-inner">
-            <a className="nav-brand" href="#dashboard">My Budget</a>
-            <div className="nav-links">
-              <a href="#dashboard">Dashboard</a>
-              <a href="#category-totals">Categories</a>
-              <a href="#budget-details">Budget details</a>
-              <CloudSync />
-            </div>
+          <div className="app-nav-inner app-nav-streamlined">
+            <AppMenu />
+            <a className="nav-brand nav-brand-centered" href="#dashboard">My Budget</a>
+            <div className="nav-spacer" aria-hidden="true" />
           </div>
         </nav>
         <div className="dashboard-shell">
