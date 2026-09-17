@@ -1,5 +1,6 @@
 import './globals.css';
 import './app-overrides.css';
+import './mobile-weeks.css';
 import AppMenu from './AppMenu';
 import AppContent from './AppContent';
 
