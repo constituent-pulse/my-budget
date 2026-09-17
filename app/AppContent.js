@@ -5,6 +5,7 @@ import BackupControls from './BackupControls';
 import WeeklyReconciliation from './WeeklyReconciliation';
 import CategoryTotals from './CategoryTotals';
 import PaycheckDashboard from './PaycheckDashboard';
+import WeekViewController from './WeekViewController';
 
 export default function AppContent({children}){
  const pathname=usePathname();
@@ -15,6 +16,7 @@ export default function AppContent({children}){
      <PaycheckDashboard />
      <div id="category-totals"><div id="category-totals-slot" /></div>
    </div>
+   <WeekViewController />
    <div id="budget-details" className="details-wrap">{children}</div>
    <WeeklyReconciliation />
    <BackupControls />
