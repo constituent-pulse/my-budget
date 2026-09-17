@@ -1,0 +1,52 @@
+/* Mobile-first treatment for the week-by-week budget. Desktop remains unchanged. */
+@media (max-width: 600px) {
+  .weeks { gap: 10px; }
+  .week-card { padding: 10px; overflow: hidden; }
+  .week-card .week-head { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 8px; }
+  .week-card .week-head > * { min-width: 0; }
+  .week-card .week-head h2,
+  .week-card .week-head h3 { font-size: .98rem; line-height: 1.2; margin: 0; }
+  .week-card .week-net { text-align: right; }
+  .week-card .week-net small { font-size: .65rem; }
+  .week-card .week-net strong { font-size: 1rem; }
+  .week-card .week-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 7px 0; }
+  .week-card .week-stats span { min-width: 0; padding: 6px 7px; font-size: .67rem; line-height: 1.25; }
+  .week-card .week-stats b { display: block; margin: 2px 0 0; font-size: .78rem; overflow-wrap: anywhere; }
+
+  /* Turn wide budget tables into readable per-bill cards instead of horizontal scrolling. */
+  .week-card .table-wrap { overflow: visible; margin: 0; padding: 0; }
+  .week-card table { min-width: 0 !important; width: 100%; }
+  .week-card .week-table thead { display: none; }
+  .week-card .week-table,
+  .week-card .week-table tbody { display: block; width: 100%; }
+  .week-card .week-table tr { display: grid; grid-template-columns: minmax(0,1fr) minmax(112px,.72fr); gap: 6px 9px; width: 100%; padding: 9px 0; border-top: 1px solid #e7ecf2; }
+  .week-card .week-table tr:first-child { border-top: 0; }
+  .week-card .week-table td { display: block; min-width: 0; width: 100%; padding: 0; border: 0; font-size: .78rem; overflow-wrap: anywhere; }
+  .week-card .week-table td::before { display: block; margin-bottom: 2px; color: #7a879d; font-size: .58rem; font-weight: 800; letter-spacing: .06em; line-height: 1.1; text-transform: uppercase; }
+  .week-card .week-table td:nth-child(1)::before { content: 'Bill'; }
+  .week-card .week-table td:nth-child(2)::before { content: 'Category'; }
+  .week-card .week-table td:nth-child(3)::before { content: 'Date'; }
+  .week-card .week-table td:nth-child(4)::before { content: 'Planned'; }
+  .week-card .week-table td:nth-child(5)::before { content: 'Actual'; }
+  .week-card .week-table td:nth-child(6)::before { content: 'Actions'; }
+  .week-card .week-table td:nth-child(n+7)::before { content: 'Action'; }
+  .week-card .week-table td:first-child { grid-column: 1 / -1; font-size: .86rem; font-weight: 800; color: #172033; }
+  .week-card .week-table input,
+  .week-card .week-table select { max-width: none !important; min-width: 0 !important; width: 100%; min-height: 38px; padding: 7px; font-size: 16px; }
+  .week-card .week-table button { max-width: 100%; white-space: normal; }
+
+  /* Reconciliation stays compact and readable too. */
+  .week-card .reconciliation-panel { margin-top: 8px; padding-top: 8px; }
+  .week-card .reconciliation-panel .week-head { grid-template-columns: 1fr auto; }
+  .week-card .reconciliation-panel .form-grid { gap: 6px; }
+  .week-card .reconciliation-panel .form-grid label { font-size: .72rem; }
+  .week-card .reconciliation-panel table:not(.week-table) { min-width: 0 !important; }
+  .week-card .reconciliation-panel table:not(.week-table) th { font-size: .58rem; padding: 5px 3px; }
+  .week-card .reconciliation-panel table:not(.week-table) td { font-size: .72rem; padding: 6px 3px; }
+  .week-card .reconciliation-panel table:not(.week-table) .small-button { min-height: 34px; padding: 5px 7px; font-size: .68rem; }
+}
+
+@media (max-width: 390px) {
+  .week-card .week-table tr { grid-template-columns: minmax(0,1fr) minmax(104px,.7fr); gap: 6px 7px; }
+  .week-card .week-stats { grid-template-columns: 1fr 1fr; }
+}
